@@ -1,10 +1,8 @@
 define([
 	'goo/math/Vector2',
-	'goo/entities/systems/System',
 	'lib/Game'
 ], function(
 	Vector2,
-	System,
 	Game
 ){
 	"use strict";

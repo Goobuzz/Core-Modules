@@ -9,20 +9,19 @@ define([
 ){
 	"use strict";
 	var view = null;
-	function Input(goo){
-		this.world = goo;
-		view = goo;
+	var _self = {};
+	_self.init = function(goo){
+		view = goo.renderer.domElement;
 		goo.renderer.domElement.addEventListener("mousedown", mouseDown, false);
 		document.addEventListener("mouseup", mouseUp, false);
 		document.addEventListener("mousemove", mouseMove, false);
-		System.call(this, "Input", []);
+		System.call(this, "_self", []);
 	};
 
-	Input.prototype = Object.create(System.prototype);
-	Input.mousePosition = new Vector2();
-	Input.mouseOld = new Vector2();
-	Input.mouseDelta = new Vector2();
-	Input.mouseButton = {};
+	_self.mousePosition = new Vector2();
+	_self.mouseOld = new Vector2();
+	_self.mouseDelta = new Vector2();
+	_self.mouseButton = {};
 
 	function mouseDown(e){
 		updateMousePos(e);
@@ -43,7 +42,7 @@ define([
 					break;
 			};
 		}
-		Input.mouseButton[btn] = true;
+		_self.mouseButton[btn] = true;
 		Game.raiseEvent("MouseButton"+btn, true);
 	};
 
@@ -66,7 +65,7 @@ define([
 					break;
 			};
 		}
-		Input.mouseButton[btn] = false;
+		_self.mouseButton[btn] = false;
 		Game.raiseEvent("MouseButton"+btn, false);
 	};
 
@@ -80,20 +79,20 @@ define([
 		if (e && e.preventDefault) {e.preventDefault();}
 		if (e && e.stopPropagation) {e.stopPropagation();}
 		
-		Input.mousePosition.x = e.pageX ? e.pageX : e.clientX + (document.documentElement.scrollLeft) ||
+		_self.mousePosition.x = e.pageX ? e.pageX : e.clientX + (document.documentElement.scrollLeft) ||
 			(document.body.scrollLeft - document.documentElement.clientLeft);
 			
-		Input.mousePosition.y = e.pageY ? e.pageY : e.clientY + (document.documentElement.scrollTop) ||
+		_self.mousePosition.y = e.pageY ? e.pageY : e.clientY + (document.documentElement.scrollTop) ||
 			(document.body.scrollTop - document.documentElement.scrollTop);
 
-		Input.mousePosition.x -= view.renderer.domElement.offsetLeft;
-		Input.mousePosition.y -= view.renderer.domElement.offsetTop;
-		Input.mouseDelta.x = Input.mouseOld.x - Input.mousePosition.x;
-		Input.mouseDelta.y = Input.mouseOld.y - Input.mousePosition.y;
-		Input.mouseOld.x = Input.mousePosition.x;
-		Input.mouseOld.y = Input.mousePosition.y;
+		_self.mousePosition.x -= view.offsetLeft;
+		_self.mousePosition.y -= view.offsetTop;
+		_self.mouseDelta.x = _self.mouseOld.x - _self.mousePosition.x;
+		_self.mouseDelta.y = _self.mouseOld.y - _self.mousePosition.y;
+		_self.mouseOld.x = _self.mousePosition.x;
+		_self.mouseOld.y = _self.mousePosition.y;
 	};
 
 	
-	return Input;
+	return _self;
 });

@@ -13,7 +13,6 @@ define([
 		goo.renderer.domElement.addEventListener("mousedown", mouseDown, false);
 		document.addEventListener("mouseup", mouseUp, false);
 		document.addEventListener("mousemove", mouseMove, false);
-		System.call(this, "_self", []);
 	};
 
 	_self.mousePosition = new Vector2();

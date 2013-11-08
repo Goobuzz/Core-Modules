@@ -9,9 +9,11 @@ function (
 	"use strict";
 	function Time(goo){
 		this._ft = 1.0 / Time.fps; // forecasted dt
-		this._pFt = 0.0; // previous forecasted dt
+		this._pFt = 1.0 / Time.fps; // previous forecasted dt
+
 		this._tr = 0.0; // trend
 		this._pTr = 0.0; // previous trend
+
 		this._avg = (2/(1 + Time.fps)); // dt average
 		this._maxFrame = this._ft * 10;
 		this._accumulated = 0.0;
@@ -20,15 +22,15 @@ function (
 	};
 	Time.prototype = Object.create(System.prototype);
 	Time.fps = 60;
-	Time.dt = 0.0; // smoothed dt
+	Time.dt = 1.0 / Time.fps; // smoothed dt
 	Time.fixedFPS = 100;
 	Time.fixedDT = 1 / Time.fixedFPS;
-	Time.time = 0.0;
+	Time.time = 0.0;;
 	Time.timeScale = 1.0;
 	Time.alpha = 0.0;
 	Time.prototype.process = function(entities, tpf){
-		if(tpf > Time._maxFrame){tpf = this._maxFrame;}
-		
+		if(tpf > this._maxFrame){tpf = this._maxFrame;}
+
 		this._pFt = this._ft;
 		this._pTr = this._tr;
 
@@ -36,16 +38,19 @@ function (
 		this._tr = ((this._ft - this._pFt) * this._avg) + ((1 - this._avg) * this._pTr);
 
 		Time.dt = this._ft + this._tr;
-
 		Time.time += Time.dt;
 		this._accumulated += Time.dt;
-		while(this._accumulated >= Time.fixedDT){
+
+		while(Time.fixedDT < this._accumulated){
 			Game.raiseEvent("FixedUpdate");
 			this._accumulated -= Time.fixedDT;
 		}
+
 		Game.raiseEvent("Update");
+
 		Time.alpha = this._accumulated / Time.fixedDT;
-		Game.raiseEvent("Render");
+		
+		Game.raiseEvent("RenderUpdate");
 		Game.raiseEvent("LateUpdate");
 	};
 

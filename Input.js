@@ -1,24 +1,61 @@
 define([
 	'goo/math/Vector2',
-	'lib/Game'
+	'js/Game'
 ], function(
 	Vector2,
 	Game
 ){
 	"use strict";
-	var view = null;
-	var _self = {};
-	_self.init = function(goo){
-		view = goo.renderer.domElement;
-		goo.renderer.domElement.addEventListener("mousedown", mouseDown, false);
-		document.addEventListener("mouseup", mouseUp, false);
-		document.addEventListener("mousemove", mouseMove, false);
+	var Input = {};
+	document.documentElement.addEventListener("mousedown", mouseDown, false);
+	document.documentElement.addEventListener("mouseup", mouseUp, false);
+	document.documentElement.addEventListener("mousemove", mouseMove, false);
+	document.documentElement.addEventListener("keyup", keyUp, false);
+	document.documentElement.addEventListener("keydown", keyDown, false);
+	// onmousewheel
+	Input.mousePosition = new Vector2();
+	Input.mouseOld = new Vector2();
+	Input.mouseDelta = new Vector2();
+	Input.movement = new Vector2();
+	Input.Action = {};
+	var keyAssign = {};
+	var mouseButtonAssign = {};
+
+	Input.assignKeyToAction = function(key, action){
+		if(null == keyAssign[key]){
+			Input.Action[action] = false;
+		}
+		else{
+			console.warn("Key:"+key+" already assigned to Action:"+keyAssign[key]);
+		}
+		keyAssign[key] = action;
+	};
+	Input.assignMouseButtonToAction = function(button, action){
+		if(null == mouseButtonAssign[button]){
+			Input.Action[action] = false;
+		}
+		else{
+			console.warn("MouseButton:"+button+" already assigned to Action:"+mouseButtonAssign[button]);
+		}
+		mouseButtonAssign[button] = action;
 	};
 
-	_self.mousePosition = new Vector2();
-	_self.mouseOld = new Vector2();
-	_self.mouseDelta = new Vector2();
-	_self.mouseButton = {};
+	function keyDown(e){
+		e = e || window.event;
+		var key = (typeof e.which === "undefined") ? e.keyCode : e.which;
+		if(null == keyAssign[key]){return;}
+		if(true == Input.Action[keyAssign[key]]){return;}
+		Input.Action[keyAssign[key]] = true;
+		Game.raiseEvent(keyAssign[key], true);
+	};
+	function keyUp(e){
+		e = e || window.event;
+		var key = (typeof e.which === "undefined") ? e.keyCode : e.which;
+		if(null == keyAssign[key]){return;}
+		if(false == Input.Action[keyAssign[key]]){return;}
+		Input.Action[keyAssign[key]] = false;
+		Game.raiseEvent(keyAssign[key], false);
+	};
 
 	function mouseDown(e){
 		updateMousePos(e);
@@ -39,8 +76,10 @@ define([
 					break;
 			};
 		}
-		_self.mouseButton[btn] = true;
-		Game.raiseEvent("MouseButton"+btn, true);
+		if(null == mouseButtonAssign[btn]){return;}
+		if(true == Input.Action[mouseButtonAssign[btn]]){return;}
+		Input.Action[mouseButtonAssign[btn]] = true;
+		Game.raiseEvent(mouseButtonAssign[btn], true);
 	};
 
 	function mouseUp(e){
@@ -62,8 +101,10 @@ define([
 					break;
 			};
 		}
-		_self.mouseButton[btn] = false;
-		Game.raiseEvent("MouseButton"+btn, false);
+		if(null == mouseButtonAssign[btn]){return;}
+		if(false == Input.Action[mouseButtonAssign[btn]]){return;}
+		Input.Action[mouseButtonAssign[btn]] = false;
+		Game.raiseEvent(mouseButtonAssign[btn], false);
 	};
 
 	function mouseMove(e){
@@ -76,20 +117,21 @@ define([
 		if (e && e.preventDefault) {e.preventDefault();}
 		if (e && e.stopPropagation) {e.stopPropagation();}
 		
-		_self.mousePosition.x = e.pageX ? e.pageX : e.clientX + (document.documentElement.scrollLeft) ||
+		Input.mousePosition.x = e.pageX ? e.pageX : e.clientX + (document.documentElement.scrollLeft) ||
 			(document.body.scrollLeft - document.documentElement.clientLeft);
 			
-		_self.mousePosition.y = e.pageY ? e.pageY : e.clientY + (document.documentElement.scrollTop) ||
+		Input.mousePosition.y = e.pageY ? e.pageY : e.clientY + (document.documentElement.scrollTop) ||
 			(document.body.scrollTop - document.documentElement.scrollTop);
 
-		_self.mousePosition.x -= view.offsetLeft;
-		_self.mousePosition.y -= view.offsetTop;
-		_self.mouseDelta.x = _self.mouseOld.x - _self.mousePosition.x;
-		_self.mouseDelta.y = _self.mouseOld.y - _self.mousePosition.y;
-		_self.mouseOld.x = _self.mousePosition.x;
-		_self.mouseOld.y = _self.mousePosition.y;
+		Input.mousePosition.x -= Game.renderer.domElement.offsetLeft;
+		Input.mousePosition.y -= Game.renderer.domElement.offsetTop;
+		Input.movement.x = e.movementX;
+		Input.movement.y = e.movementY;
+		Input.mouseDelta.x = Input.mouseOld.x - Input.mousePosition.x;
+		Input.mouseDelta.y = Input.mouseOld.y - Input.mousePosition.y;
+		Input.mouseOld.x = Input.mousePosition.x;
+		Input.mouseOld.y = Input.mousePosition.y;
 	};
 
-	
-	return _self;
+	return Input;
 });

@@ -1,6 +1,6 @@
 define([
 	'goo/entities/systems/System',
-	'lib/Game'
+	'js/Game'
 ],
 function (
 	System,
@@ -16,18 +16,21 @@ function (
 
 		this._avg = (2/(1 + Time.fps)); // dt average
 		this._maxFrame = this._ft * 10;
-		this._accumulated = 0.0;
+		//this._accumulated = 0.0;
 		this.world = goo;
 		System.call(this, "Time", []);
 	};
 	Time.prototype = Object.create(System.prototype);
+	Time.contstructor = Time;
 	Time.fps = 60;
 	Time.dt = 1.0 / Time.fps; // smoothed dt
-	Time.fixedFPS = 100;
-	Time.fixedDT = 1 / Time.fixedFPS;
+	Time.fixedFPS = 60;
+	Time.fixedDT = 1.0 / Time.fixedFPS;
 	Time.time = 0.0;;
 	Time.timeScale = 1.0;
 	Time.alpha = 0.0;
+	Time.negAlpha = 0.0;
+	Time.accumulated = 0.0;
 	Time.prototype.process = function(entities, tpf){
 		if(tpf > this._maxFrame){tpf = this._maxFrame;}
 
@@ -39,20 +42,23 @@ function (
 
 		Time.dt = this._ft + this._tr;
 		Time.time += Time.dt;
-		this._accumulated += Time.dt;
-
-		while(Time.fixedDT < this._accumulated){
-			Game.raiseEvent("FixedUpdate");
-			this._accumulated -= Time.fixedDT;
-		}
 
 		Game.raiseEvent("Update");
 
-		Time.alpha = this._accumulated / Time.fixedDT;
-		
-		Game.raiseEvent("RenderUpdate");
+		Time.accumulated += Time.dt;
+		while(Time.fixedDT < Time.accumulated){
+			Game.raiseEvent("FixedUpdate");
+			Time.accumulated -= Time.fixedDT;
+		}
+		Time.alpha = Time.accumulated / Time.fixedDT;
+		Time.negAlpha = 1 - Time.alpha;
+
+		if(Game.ammoWorld){
+			Game.ammoWorld.stepSimulation(tpf, Math.floor(Time.dt / Time.fixedDT)+1, Time.fixedDT);
+			Game.raiseEvent("AmmoUpdate");
+		}
+
 		Game.raiseEvent("LateUpdate");
 	};
-
 	return Time;
 });

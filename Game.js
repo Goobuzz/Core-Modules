@@ -19,6 +19,7 @@ define([
 		manuallyStartGameLoop: false,
 		tpfSmoothingCount:1
 	});
+	Game.doRender = false;
 
 	var picking = new PickingSystem({pickLogic: new PrimitivePickLogic()});
     var v1 = new Vector3();
@@ -31,6 +32,7 @@ define([
     var hitIndex = 0;
 
     Game.world.setSystem(picking);
+    Game.ray = new Ray();
 
     picking.onPick = function(result){
     	hit = null;
@@ -91,16 +93,16 @@ define([
 	    	}
 	    }
 		picking.hit = hit;
-    }
+    };
 	
     Game.castRay = function(ray, mask, all){
-
     	picking.pickRay = ray;
     	picking.mask = mask;
     	picking.all = all;
     	picking._process();
     	return picking.hit;
-    }
+    };
+    Object.freeze(Game.castRay);
 
 	var listeners = {};
 
@@ -160,5 +162,8 @@ define([
 		return Game;
 	}
 	Object.freeze(Game.raiseEvent);
+
+	Game.renderer.domElement.id = 'goo';
+	document.body.appendChild(Game.renderer.domElement);
 	return Game;
 });

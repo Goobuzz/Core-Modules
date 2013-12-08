@@ -7,16 +7,18 @@ define([
 ){
 	"use strict";
 	var Input = {};
-	document.documentElement.addEventListener("mousedown", mouseDown, false);
-	document.documentElement.addEventListener("mouseup", mouseUp, false);
-	document.documentElement.addEventListener("mousemove", mouseMove, false);
-	document.documentElement.addEventListener("keyup", keyUp, false);
-	document.documentElement.addEventListener("keydown", keyDown, false);
-	// onmousewheel
 	Input.mousePosition = new Vector2();
 	Input.mouseOld = new Vector2();
 	Input.mouseDelta = new Vector2();
 	Input.movement = new Vector2();
+
+	document.documentElement.addEventListener("mousedown", mouseDown, true);
+	//document.documentElement.addEventListener("mouseup", mouseUp, false);
+	document.documentElement.addEventListener("mouseup", mouseUp, true);
+	document.documentElement.addEventListener("mousemove", mouseMove, true);
+	document.documentElement.addEventListener("keyup", keyUp, false);
+	document.documentElement.addEventListener("keydown", keyDown, false);
+	// onmousewheel
 	Input.Action = {};
 	var keyAssign = {};
 	var mouseButtonAssign = {};

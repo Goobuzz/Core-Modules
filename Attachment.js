@@ -43,7 +43,7 @@ define([
                 pos.y*(1/target.transformComponent.transform.scale.y),
                 pos.z*(1/target.transformComponent.transform.scale.z));
         }
-        console.log(attachee.transformComponent.transform.translation);
+        //console.log(attachee.transformComponent.transform.translation);
         if(rot){
             attachee.transformComponent.transform.rotation.fromAngles(rot.y, rot.z, rot.x);
         }

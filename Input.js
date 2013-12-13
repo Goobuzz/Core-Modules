@@ -7,18 +7,174 @@ define([
 ){
 	"use strict";
 	var Input = {};
+	document.documentElement.addEventListener("mousedown", mouseDown, false);
+	document.documentElement.addEventListener("mouseup", mouseUp, false);
+	document.documentElement.addEventListener("mousemove", mouseMove, false);
+	document.documentElement.addEventListener("keyup", keyUp, false);
+	document.documentElement.addEventListener("keydown", keyDown, false);
+	
+	var gamepads = [];
+	var oldStates = [];
+	var oldGamepads = [];
+	var prevTimestamp = [];
+
+	function gamepadConnected(e){
+  		console.log("Gamepad Connected");
+  		console.log(e);
+  		gamepads.push(e.gamepad);
+  		updateGamepadStates();
+  		//Game.register("Update", this, pollGamepadState, -1);
+  	}
+  	function gamepadRemoved(e){
+  		console.log("Gamepad Removed");
+  		console.log(e);
+  		for(var i = 0, ilen = gamepads.length; i < ilen; i++){
+  			if(gamepads[i].index == e.gamepad.index){
+
+  				gamepads.splice(i, 1);
+  				break;
+  			}
+  		}
+  		updateGamepadStates();
+  		// check for gamepads.length and stop polling...
+  	}
+  	function gamepadButtonDown(e){
+  		console.log("Button Down");
+  		// e.button
+  		console.log(e);
+  	}
+  	function gamepadButtonUp(e){
+  		console.log("Button Up");
+  		// e.button
+  		console.log(e);
+  	}
+  	function gamepadAnalogMove(e){
+  		console.log("Analog");
+  		// e.axis, e.value
+  		console.log(e);
+  	}
+
+	var gamepadSupportAvailable = !!navigator.webkitGetGamepads || 
+		!!navigator.webkitGamepads ||
+		(navigator.userAgent.indexOf('Firefox/') != -1);
+
+	if (!gamepadSupportAvailable) {
+    	console.warn("No gamepad support.");
+  	} else {
+  		window.addEventListener('MozGamepadButtonDown', gamepadButtonDown);
+  		window.addEventListener('MozGamepadButtonUp', gamepadButtonUp);
+  		 window.addEventListener('MozGamepadConnected', gamepadConnected);
+		 window.addEventListener('MozGamepadDisconnected', gamepadRemoved);
+		 window.addEventListener('MozGamepadAxisMove', gamepadAnalogMove);
+		//window.addEventListener('gamepadconnected', gamepadConnected);
+		//window.addEventListener('gamepaddisconnected', gamepadRemoved);
+
+		if (!!navigator.webkitGamepads || !!navigator.webkitGetGamepads) {
+    		// start polling
+
+    		Game.register("Update", this, pollGamepadState, -1);
+    	}
+  	}
+  	
+	function pollGamepadChange(){
+		var gamepad = (navigator.webkitGetGamepads && navigator.webkitGetGamepads()) ||
+		navigator.webkitGamepads;
+		if(gamepad){
+			var changed = false;
+			gamepads = [];
+			for(var i = 0, ilen = gamepad.length; i < ilen; i++){
+				if(typeof gamepad[i] != oldGamepads[i]){
+					changed = true;
+					oldGamepads[i] = typeof gamepad[i];
+				}
+				if(gamepad[i]){
+					gamepads.push(gamepad[i]);
+				}
+			}
+			if(changed){
+				updateGamepadStates();
+			}
+		}
+	};
+
+	function updateGamepadStates(){
+		oldStates = [];
+  		for(var i = 0, ilen = gamepads.length; i < ilen; i++){
+  			var buttons = [];
+  			var axes = [];
+  			for(var b = 0, blen = gamepads[i].buttons.length; b < blen; b++){
+  				buttons[b] = gamepads[i].buttons[b];
+  			}
+  			for(var a = 0, alen = gamepads[i].axes.length; a < alen; a++){
+  				axes[a] = gamepads[i].axes[a];
+  			}
+  			oldStates.push({buttons:buttons, axes:axes});
+  		}
+	}
+
+	function pollGamepadState(){
+		pollGamepadChange();
+		for(var i = 0, ilen = gamepads.length; i < ilen; i++){
+			var gamepad = gamepads[i];
+			if(gamepad.timestamp && gamepad.timestamp == prevTimestamp[i]){continue;}
+			prevTimestamp[i] = gamepad.timestamp;
+			//console.log("State Changed");
+			for(var b = 0, blen = gamepad.buttons.length; b < blen; b++){
+				if(null == gamepadButtonAssign[i][b]){continue;}
+				if(oldStates[i].buttons[b] != gamepad.buttons[b]){
+					oldStates[i].buttons[b] = gamepad.buttons[b];
+					if(gamepad.buttons[b] == 0){
+						if(false == Input.Action[gamepadButtonAssign[i][b]]){continue;}
+						Input.Action[gamepadButtonAssign[i][b]] = false;
+						Game.raiseEvent(gamepadButtonAssign[i][b], false);
+					}
+					if(gamepad.buttons[b] == 1){
+						if(true == Input.Action[gamepadButtonAssign[i][b]]){continue;}
+						Input.Action[gamepadButtonAssign[i][b]] = true;
+						Game.raiseEvent(gamepadButtonAssign[i][b], true);
+					}
+				}
+			}
+			for(var a = 0, alen = gamepad.axes.length; a < alen; a++){
+				//console.log("gamepad:"+i+" axis:"+a+":"+gamepad.axes[a]);
+				if(null == gamepadAxesAssign[i][a]){continue;}
+				if(oldStates[i].axes[a] != gamepad.axes[a]){
+					oldStates[i].axes[a] = gamepad.axes[a];
+					Input.Action[gamepadAxesAssign[i][a]] = gamepad.axes[a];
+					Game.raiseEvent(gamepadAxesAssign[i][a], gamepad.axes[a]);
+				}
+			}
+		};
+	}
+
+	var gamepadButtonAssign = [{},{},{},{}];
+	var gamepadAxesAssign = [{},{},{},{}];
+
+	Input.assignGamepadAxisToAction = function(gamepad, axis, action){
+		if(null == gamepadAxesAssign[gamepad][axis]){
+			Input.Action[action] = false;
+		}
+		else{
+			console.warn("Gamepad:"+gamepad+" Axis:"+axis+" already assigned to Action:"+gamepadAxesAssign[gamepad][axis]);
+		}
+		gamepadAxesAssign[gamepad][axis] = action;
+	};
+
+	Input.assignGamepadButtonToAction = function(gamepad, button, action){
+		if(null == gamepadButtonAssign[gamepad][button]){
+			Input.Action[action] = false;
+		}
+		else{
+			console.warn("Gamepad:"+gamepad+" Button:"+button+" already assigned to Action:"+gamepadButtonAssign[gamepad][button]);
+		}
+		gamepadButtonAssign[gamepad][button] = action;
+	};
+
+	// onmousewheel
 	Input.mousePosition = new Vector2();
 	Input.mouseOld = new Vector2();
 	Input.mouseDelta = new Vector2();
 	Input.movement = new Vector2();
-
-	document.documentElement.addEventListener("mousedown", mouseDown, true);
-	//document.documentElement.addEventListener("mouseup", mouseUp, false);
-	document.documentElement.addEventListener("mouseup", mouseUp, true);
-	document.documentElement.addEventListener("mousemove", mouseMove, true);
-	document.documentElement.addEventListener("keyup", keyUp, false);
-	document.documentElement.addEventListener("keydown", keyDown, false);
-	// onmousewheel
 	Input.Action = {};
 	var keyAssign = {};
 	var mouseButtonAssign = {};

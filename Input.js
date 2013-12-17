@@ -275,20 +275,22 @@ define([
 		if (e && e.preventDefault) {e.preventDefault();}
 		if (e && e.stopPropagation) {e.stopPropagation();}
 		
-		Input.mousePosition.x = e.pageX ? e.pageX : e.clientX + (document.documentElement.scrollLeft) ||
+		var newX = e.pageX ? e.pageX : e.clientX + (document.documentElement.scrollLeft) ||
 			(document.body.scrollLeft - document.documentElement.clientLeft);
 			
-		Input.mousePosition.y = e.pageY ? e.pageY : e.clientY + (document.documentElement.scrollTop) ||
+		var newY = e.pageY ? e.pageY : e.clientY + (document.documentElement.scrollTop) ||
 			(document.body.scrollTop - document.documentElement.scrollTop);
 
-		Input.mousePosition.x -= Game.renderer.domElement.offsetLeft;
-		Input.mousePosition.y -= Game.renderer.domElement.offsetTop;
+		newX -= Game.renderer.domElement.offsetLeft;
+		newY -= Game.renderer.domElement.offsetTop;
 		Input.movement.x = e.movementX;
 		Input.movement.y = e.movementY;
-		Input.mouseDelta.x = Input.mouseOld.x - Input.mousePosition.x;
-		Input.mouseDelta.y = Input.mouseOld.y - Input.mousePosition.y;
+		Input.mouseDelta.x = Input.mousePosition.x - newX;
+		Input.mouseDelta.y = Input.mousePosition.y - newY;
 		Input.mouseOld.x = Input.mousePosition.x;
 		Input.mouseOld.y = Input.mousePosition.y;
+		Input.mousePosition.x = newX;
+		Input.mousePosition.y = newY;
 	};
 
 	return Input;

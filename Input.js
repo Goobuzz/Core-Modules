@@ -285,8 +285,8 @@ define([
 		newY -= Game.renderer.domElement.offsetTop;
 		Input.movement.x = e.movementX;
 		Input.movement.y = e.movementY;
-		Input.mouseDelta.x = Input.mousePosition.x - newX;
-		Input.mouseDelta.y = Input.mousePosition.y - newY;
+		Input.mouseDelta.x = newX - Input.mousePosition.x;
+		Input.mouseDelta.y = newY - Input.mousePosition.y;
 		Input.mouseOld.x = Input.mousePosition.x;
 		Input.mouseOld.y = Input.mousePosition.y;
 		Input.mousePosition.x = newX;

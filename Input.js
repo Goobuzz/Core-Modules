@@ -13,6 +13,18 @@ define([
 	document.documentElement.addEventListener("keyup", keyUp, false);
 	document.documentElement.addEventListener("keydown", keyDown, false);
 	
+	// thanks t-bone!
+	document.documentElement.addEventListener("mousewheel", mouseWheel, false);
+	document.documentElement.addEventListener("DOMMouseScroll", mouseWheel, false); // Firefox
+	
+	Input.mouseWheelDelta = 0;
+
+	function mouseWheel(e){
+		e = e || window.event;
+		Input.mouseWheelDelta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+		Game.raiseEvent("MouseWheel", Input.mouseWheelDelta);
+	};
+	
 	var gamepads = [];
 	var oldStates = [];
 	var oldGamepads = [];
